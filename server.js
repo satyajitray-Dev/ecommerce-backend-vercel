@@ -27,8 +27,8 @@ app.use("/api/cart",cartroute);
 app.use("/api/address",addressroute);
 app.use("/api/order",orderroute);
 app.use("/api/user",userroute);
-connectDB();
-app.listen(PORT,()=>{
+//connectDB();
+//app.listen(PORT,()=>{
     console.log(`http://localhost:${PORT}`);
 
-});
+//});
