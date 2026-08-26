@@ -1,11 +1,36 @@
 //import pruductSchema from "../model/product";
 import productSchema from "../model/product.js";
 import categoryschema from "../model/category.js";
+;
+import cloudinary from "../config/cloudinary.js";
+import streamifier from "streamifier";
+
+const uploadToCloudinary = (buffer) => {
+    return new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+            {
+                folder: "ecommerce/products",
+                resource_type: "image"
+            },
+            (error, result) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(result);
+                }
+            }
+        );
+
+        streamifier.createReadStream(buffer).pipe(stream);
+    });
+};
 //create product
 export const createproduct = async (req,res)=>{
     try{
         const products = req.body;
-        const image =`/uploads/${req.file.filename}`;
+       const results = await uploadToCloudinary(req.file.buffer);
+
+        const image = results.secure_url;
       
         if(!products){
             return res.status(500).json({
