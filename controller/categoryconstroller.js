@@ -1,5 +1,28 @@
 import categoryschema from "../model/category.js";
 import slugify from "slugify";
+import cloudinary from "../config/cloudinary.js";
+import { Readable } from "stream";
+
+const uploadToCloudinary = (buffer) => {
+    return new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+            {
+                folder: "ecommerce/categories",
+                resource_type: "image"
+            },
+            (error, result) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(result);
+                }
+            }
+        );
+
+        Readable.from(buffer).pipe(stream);
+    });
+};
+
 export const addcategory=async(req,res)=>{
     try{
         const {id,name}= req.body;
@@ -10,9 +33,11 @@ export const addcategory=async(req,res)=>{
         }
 
         const slugcreate = name.toLowerCase().trim().replace(/\s+/g, "-");
-        const image= `/uploads/${req.file.filename}`;
+        const resultimage= await uploadToCloudinary(req.file.buffer);
+
+        const image = resultimage.secure_url;
         
-        const result=await categoryschema.create({id, name, image: image,slug: slugcreate});
+        const result=await categoryschema.create({id, name, image: image, slug: slugcreate});
         res.status(200).json({
             result
         })
