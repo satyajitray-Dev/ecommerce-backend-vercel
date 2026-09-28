@@ -18,7 +18,10 @@ import userroute from "./routes/userroute.js";
 dotenv.config();
 const PORT=process.env.port;
 const app= express();
-app.use(cors());
+const frontend= process.env.frontend_url;
+app.use(cors({
+     origin: frontend,
+  credentials: true}));
 app.use(express.json());
 app.use("/uploads", express.static("uploads"));
 app.use("/api/auth",authroute);
