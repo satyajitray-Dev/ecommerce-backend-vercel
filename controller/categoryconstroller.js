@@ -89,19 +89,16 @@ export const updatecategory=async(req,res)=>{
 }
 export const getcategory=async(req,res)=>{
     try{
-        const page=parseInt(req.query.page) || 1
+        /*const page=parseInt(req.query.page) || 1
         const limit= parseInt(req.query.limit) || 2;
-        const skip= (page-1)*limit;
+        const skip= (page-1)*limit;*/
 
-        const get= await categoryschema.find().sort({created: -1}).skip(skip).limit(limit);
-        const totalcategory= await categoryschema.countDocuments();
-        const totalpage= Math.ceil(totalcategory/limit);
+        const get= await categoryschema.find().sort({created: -1});
+       
         res.status(200).json({
             
                 success: true,
-            currentpage: page,
-            totalcategory: totalcategory,
-            totalpage: totalpage,
+         
             category: get
         });
 

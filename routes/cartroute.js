@@ -4,5 +4,5 @@ const route=express.Router();
 route.post("/add",addcart);
 route.delete("/remove/:id",deletecart);
 route.delete("/removeitem",deleteitems);
-route.get("/",getcart)
+route.get("/:id",getcart)
 export default route;

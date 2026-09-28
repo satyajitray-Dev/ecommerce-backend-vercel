@@ -25,16 +25,12 @@ const schema = mongoose.Schema({
     role: {
         required: [true,"must required"],
         type: String,
-        enum: {
-            values: ['admin', 'customer'],
-            message: "role must be admin or customer"
-        }
+        default: "user"
 
     },
     avatar: {
         type: String,
         required: [true,"avatar must be required"],
-        match: [/^https?:\/\/.+/, "Avatar must be a valid URL"]
     }
 },{
             timestamps: true

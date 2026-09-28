@@ -5,8 +5,8 @@ import addressschema from "../model/address.js";
 
 export const placeorder = async(req,res)=>{
     try{
-        const {userId} =req.body;
-        let address= await addressschema.findOne({userId, isDefault: true});
+        const {userId} =req.params.id;
+        const address= await addressschema.findOne({userId, isDefault: true});
         if(!address){
             return res.status(404).json({
                 success: false,
@@ -43,7 +43,7 @@ export const placeorder = async(req,res)=>{
         })
 
     }catch(err){
-        console.log(err);
+       
         return res.status(500).json({
             success: false,
             message: "server error"

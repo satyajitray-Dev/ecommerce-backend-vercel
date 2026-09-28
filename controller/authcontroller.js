@@ -3,10 +3,44 @@ import userSchema from '../model/user.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 //signup
+
+import cloudinary from "../config/cloudinary.js";
+import streamifier from "streamifier";
+
+
+const uploadToCloudinary = (buffer) => {
+    return new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+            {
+                folder: "ecommerce/products",
+                resource_type: "image"
+            },
+            (error, result) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(result);
+                }
+            }
+        );
+
+        streamifier.createReadStream(buffer).pipe(stream);
+    });
+};
 export const signupUser=async(req,res)=>{
+   
     try{
-        const {name,password,email,id,role,avatar}=req.body;
-        if(!name || !email || !id || !password || !role || !avatar){
+       
+        const {name,password,email,id}=req.body;
+        const img=await uploadToCloudinary(req.file.buffer);
+        if(!img){
+            res.status(400).json({
+                message: "image not get"
+            })
+        }
+        const image= img.secure_url;
+
+        if(!name || !email || !id || !password){
             return res.status(500).json({
             status: "500",
             success: false,
@@ -27,8 +61,8 @@ export const signupUser=async(req,res)=>{
             email,
             password: hashpassword,
             id,
-            role,
-            avatar
+           
+            avatar:image
 
         });
         const{password: _, ...userData}=user.toObject();
@@ -55,12 +89,12 @@ export const signupUser=async(req,res)=>{
 export const login=async(req,res)=>{
     try{
 
-        const {email,password,role}=req.body;
-         if(!role || !email || !password ){
+        const {email,password}=req.body;
+         if(!email || !password ){
             return res.status(500).json({
                 status: 500,
                 success: false,
-                message: "enter valid password,email,role"})
+                message: "enter valid password,email"})
         
 
         }
@@ -97,7 +131,10 @@ export const login=async(req,res)=>{
         res.status(200).json({
              status: "200 ",
                 success: true,
-            message: "login successfull",token
+            message: "login successfull",
+            userId: userexist._id,
+            userrole: userexist.role,
+            token: token
         })
 
     }
@@ -106,7 +143,7 @@ export const login=async(req,res)=>{
         res.status(500).json({
             status: "500 ",
             success: false,
-            message: Object.values(err.errors).map(error=>error.message)
+            message: Object.values(err).map(error=>error.message)
         })
     }
 }

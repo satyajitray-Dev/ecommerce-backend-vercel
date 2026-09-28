@@ -1,7 +1,7 @@
 //import pruductSchema from "../model/product";
 import productSchema from "../model/product.js";
 import categoryschema from "../model/category.js";
-;
+
 import cloudinary from "../config/cloudinary.js";
 import streamifier from "streamifier";
 
@@ -29,6 +29,12 @@ export const createproduct = async (req,res)=>{
     try{
         const products = req.body;
        const results = await uploadToCloudinary(req.file.buffer);
+       if(!results){
+        return res.status(400).json({
+                success: false,
+                message: "Image is required"
+            });
+       }
 
         const image = results.secure_url;
       
@@ -54,14 +60,11 @@ export const createproduct = async (req,res)=>{
         createdby: req.user.id
         });
         const result= await productSchema.findById(product._id).populate("category" );
-        
-
         res.status(200).json({
             success: true,
             
             result
         })
-
     }
     catch(err){
         console.log(err);
@@ -75,20 +78,28 @@ export const createproduct = async (req,res)=>{
 export const getproduct= async(req,res)=>{
     try{
         const page= parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 4;
+        const limit = parseInt(req.query.limit) || 20;
         const skip= (page-1)*limit;
-        
-        const product=await productSchema.find().populate("category").sort({createdAt:-1}).skip(skip).limit(limit);
-
-       
-        const totalproducts=  await productSchema.countDocuments();
+        const search= req.query.search||"";
+        const category= req.query.category|| "";
+        const filter={};
+        if(search){
+            filter.title={
+                $regex: search, $options: "i"
+            };
+        }
+        if(category){
+            filter.category= category;
+        }
+        //const filter= search? { title: { $regex: search, $options: "i" } }: {};
+        const product=await productSchema.find(filter).populate("category").sort({createdAt:-1}).skip(skip).limit(limit);       
+        const totalproducts=  await productSchema.countDocuments(filter);
         const totalpages= Math.ceil(totalproducts / limit);
-
         res.status(200).json({
             success: true,
+            totalpages: totalpages,
                 currentPage: page,
             limit: limit,
-    
             products: product
         })
     }
@@ -106,7 +117,6 @@ export const getproduct= async(req,res)=>{
 export const getbyidproduct= async(req,res)=>{
     try{
         const product=await productSchema.findOne({_id: req.params.id}).populate("category",'name slug');
-
         res.status(200).json({
             success: true,
             product
@@ -123,29 +133,41 @@ export const getbyidproduct= async(req,res)=>{
     }
 }
 //update product
-export const updateproduct= async(req,res)=>{
-    try{
+export const updateproduct = async (req, res) => {
+  try {
+    let updateData = { ...req.body };
 
-       const updatedproduct= await productSchema.findByIdAndUpdate(req.params.id, req.body,{new: true});
-       if(!updatedproduct){
-        return res.status(500).json({
-            success: false,
-            message: "ivalid id or body"
-        });
+    // If an image was uploaded via multer
+    if (req.file) {
+      const result = await uploadToCloudinary(req.file.buffer);
+      updateData.image = result.secure_url;
 
-       }
-       res.status(200).json({
-        success: true,
-        message: "updated successfully",
-        updatedproduct
-       })
-    }catch(err){
-         console.log(err);
-         res.status(500).json({
-            success: false,
-            message: "server error"
-        });
     }
+    const updatedproduct = await productSchema.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true }
+    );
+
+    if (!updatedproduct) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid ID or payload",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Updated successfully",
+      updatedproduct,
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
 }
  export const deleteproduct=(req,res)=>{
 

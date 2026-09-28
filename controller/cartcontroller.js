@@ -8,10 +8,7 @@ export const addcart=async(req,res)=>{
     try{
    
     const { userId, items } = req.body;
-
-    for (const item of items) { 
-    const { productId, quantity } = item;
-    const userexist= await userSchema.findById(userId);
+     const userexist= await userSchema.findById(userId);
     if(!userexist){
         return res.status(500).json({
             status: "500",
@@ -19,16 +16,18 @@ export const addcart=async(req,res)=>{
             message: "user doesnt exist"
         })
     }
+    let cart= await cartschema.findOne({userId});
+    for (const item of items) { 
+    const { productId, quantity } = item;
     const productexist= await productSchema.findById(productId);
     if(!productexist){
-      
         return res.status(500).json({
             status: "500",
             success: false,
             message: "product doesnt exist"
         })
     }
-    let cart= await cartschema.findOne({userId});
+    //let cart= await cartschema.findOne({userId});
     if(!cart){
         cart = await cartschema.create({
             userId: userId,
@@ -47,9 +46,11 @@ export const addcart=async(req,res)=>{
                 quantity: quantity || 1
             })
         }
+    }
+}
         await cart.save();
         
-    }
+    
     const result= await cartschema.findById(cart._id).populate("userId","-password").populate({
     path: "items.productId",
     populate: {
@@ -64,7 +65,7 @@ export const addcart=async(req,res)=>{
     })
 
 
-}
+
 }catch(err){
         console.log(err);
         res.status(500).json({
@@ -125,7 +126,7 @@ export const deleteitems=async(req,res)=>{
 }
 export const getcart= async(req,res)=>{
     try{
-        const {userId} =req.body;
+        const userId =req.params.id;
         const get = await cartschema.findOne({userId: userId}).populate("userId","-password").populate({path: "items.productId", populate: {path: "category"}});
         if(!get){
             return res.status(500).json({

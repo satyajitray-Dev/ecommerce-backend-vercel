@@ -38,3 +38,21 @@ export const getaddress= async(req,res)=>{
             message: "server error"})
     }
 }
+export const address=async(req,res)=>{
+    try{
+        const limit= parseInt(req.query.limit) || 1;
+        const page= parseInt(req.query.page) || 1;
+        const skip= (page-1)*limit;
+        const addresses= await addressschema.find().skip(skip).limit(limit);
+        res.status(200).json({
+            status: "success",
+            addresses
+        })
+
+
+    }catch(err){
+        res.status(500).json({
+            status: "failed"
+        })
+    }
+}
