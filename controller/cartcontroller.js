@@ -6,7 +6,6 @@ import { ReturnDocument } from "mongodb";
 
 export const addcart=async(req,res)=>{
     try{
-   
     const { userId, items } = req.body;
      const userexist= await userSchema.findById(userId);
     if(!userexist){
@@ -87,7 +86,6 @@ export const deletecart= async(req,res)=>{
                 message: "Cart not found"
             });
         }
-
         res.status(200).json({
             status: "200",
             success: true,
